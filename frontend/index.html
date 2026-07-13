@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shrnk — a terminal for your links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface-2: #191d26;
+    --border: #262b36;
+    --text: #e7e9ee;
+    --muted: #7b8394;
+    --teal: #57e8c9;
+    --violet: #8b7bff;
+    --red: #ff6b6b;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(139,123,255,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(87,232,201,0.07), transparent 40%);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 48px 16px;
+    line-height:1.5;
+  }
+
+  .wrap{ width:100%; max-width:720px; }
+
+  /* ---- header ---- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:28px;
+  }
+  .brand-mark{
+    width:34px; height:34px;
+    border-radius:8px;
+    background: linear-gradient(135deg, var(--teal), var(--violet));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:800; color:#0a0c10; font-size:16px;
+    flex-shrink:0;
+  }
+  .brand-name{ font-family:var(--mono); font-weight:700; font-size:18px; letter-spacing:-0.02em; }
+  .brand-tag{ font-size:13px; color:var(--muted); }
+
+  .brand-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:28px;
+  }
+  .brand-row .brand{ margin-bottom:0; }
+
+  .lang-switch{
+    display:flex;
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:3px;
+    flex-shrink:0;
+  }
+  .lang-btn{
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    background:none;
+    border:none;
+    border-radius:6px;
+    padding:6px 12px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .lang-btn:hover{ color:var(--text); }
+  .lang-btn.active{
+    background: linear-gradient(135deg, var(--teal), var(--violet));
+    color:#0a0c10;
+  }
+
+  /* ---- terminal window ---- */
+  .terminal{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    overflow:hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .term-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    background: var(--surface-2);
+    border-bottom:1px solid var(--border);
+  }
+  .dot{ width:11px; height:11px; border-radius:50%; }
+  .dot.r{ background:#ff5f56; }
+  .dot.y{ background:#ffbd2e; }
+  .dot.g{ background:#27c93f; }
+  .term-title{
+    margin-left:8px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .term-body{ padding:28px 24px 24px; }
+
+  .prompt-line{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:14px;
+    display:flex;
+    gap:8px;
+  }
+  .prompt-line .sym{ color:var(--teal); }
+
+  .input-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .input-shell{
+    flex:1 1 300px;
+    display:flex;
+    align-items:center;
+    background: var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:0 14px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .input-shell:focus-within{
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(87,232,201,0.12);
+  }
+  .input-shell .prefix{
+    font-family:var(--mono);
+    color:var(--muted);
+    font-size:14px;
+    padding-right:8px;
+    border-right:1px solid var(--border);
+    margin-right:10px;
+    white-space:nowrap;
+  }
+  #urlInput{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:14px;
+    padding:14px 0;
+    min-width:0;
+  }
+  #urlInput::placeholder{ color: #454b58; }
+
+  .btn{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    border:none;
+    border-radius:8px;
+    padding:0 22px;
+    cursor:pointer;
+    color:#0a0c10;
+    background: linear-gradient(135deg, var(--teal), #4fd1b8);
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    white-space:nowrap;
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(87,232,201,0.5); }
+  .btn:active{ transform: translateY(0); }
+  .btn:disabled{ opacity:0.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+  .spinner{
+    width:14px; height:14px;
+    border-radius:50%;
+    border:2px solid rgba(10,12,16,0.3);
+    border-top-color:#0a0c10;
+    animation:spin .6s linear infinite;
+    display:none;
+  }
+  .btn.loading .spinner{ display:inline-block; }
+  .btn.loading .btn-label{ display:none; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error{
+    display:none;
+    margin-top:12px;
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--red);
+    background: rgba(255,107,107,0.08);
+    border:1px solid rgba(255,107,107,0.3);
+    border-radius:8px;
+    padding:10px 12px;
+  }
+  .error.show{ display:block; }
+
+  /* ---- result ---- */
+  .result{
+    display:none;
+    margin-top:20px;
+    background: var(--surface-2);
+    border:1px solid var(--teal);
+    border-radius:8px;
+    padding:18px;
+  }
+  .result.show{ display:block; animation: fadeUp .3s ease; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  .result-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .result-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .result-link{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:16px;
+    color:var(--teal);
+    text-decoration:none;
+    word-break:break-all;
+    flex:1 1 auto;
+  }
+  .result-link:hover{ text-decoration:underline; }
+
+  .copy-btn{
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:600;
+    color:var(--text);
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition: all .15s ease;
+    white-space:nowrap;
+  }
+  .copy-btn:hover{ border-color:var(--violet); color:var(--violet); }
+  .copy-btn.copied{ border-color:var(--teal); color:var(--teal); }
+
+  /* ---- history ---- */
+  .history{ margin-top:36px; }
+  .history-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .history-title{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .clear-btn{
+    background:none; border:none;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .clear-btn:hover{ color:var(--red); }
+
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .history-item{
+    background: var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .history-item .h-slug{
+    font-family:var(--mono);
+    font-weight:600;
+    color:var(--violet);
+    text-decoration:none;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  .history-item .h-slug:hover{ text-decoration:underline; }
+  .history-item .h-arrow{ color:var(--muted); font-size:12px; flex-shrink:0; }
+  .history-item .h-long{
+    font-size:13px;
+    color:var(--muted);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+    min-width:0;
+  }
+  .history-empty{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--muted);
+    padding:16px 0;
+    text-align:center;
+    border:1px dashed var(--border);
+    border-radius:8px;
+  }
+
+  .footnote{
+    margin-top:28px;
+    text-align:center;
+    font-size:12px;
+    color:#454b58;
+    font-family:var(--mono);
+  }
+
+  @media (max-width: 480px){
+    .input-row{ flex-direction:column; }
+    .btn{ padding:14px 0; }
+    .term-body{ padding:22px 16px 18px; }
+    .history-item{ flex-wrap:wrap; }
+    .history-item .h-long{ flex-basis:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand-row">
+    <div class="brand">
+      <div class="brand-mark">/s</div>
+      <div>
+        <div class="brand-name">shrnk</div>
+        <div class="brand-tag" data-i18n="tagline">paste a long url, get a short one back</div>
+      </div>
+    </div>
+    <div class="lang-switch">
+      <button class="lang-btn" id="langEn" data-lang="en">EN</button>
+      <button class="lang-btn" id="langRu" data-lang="ru">RU</button>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <span class="dot r"></span>
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+      <span class="term-title">localhost:8000/short_url</span>
+    </div>
+    <div class="term-body">
+      <div class="prompt-line"><span class="sym">$</span> <span data-i18n="prompt">paste-url --shorten</span></div>
+
+      <div class="input-row">
+        <div class="input-shell">
+          <span class="prefix">url</span>
+          <input id="urlInput" type="text" data-i18n-placeholder="inputPlaceholder" placeholder="https://example.com/a/very/long/path?with=params" autocomplete="off" spellcheck="false">
+        </div>
+        <button class="btn" id="genBtn">
+          <span class="btn-label" data-i18n="generate">Generate</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <div class="error" id="errorBox"></div>
+
+      <div class="result" id="resultBox">
+        <div class="result-label" data-i18n="resultLabel">your short url</div>
+        <div class="result-row">
+          <a href="#" id="resultLink" class="result-link" target="_blank" rel="noopener"></a>
+          <button class="copy-btn" id="copyBtn" data-i18n="copy">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="history">
+    <div class="history-head">
+      <span class="history-title" data-i18n="recent">Recent</span>
+      <button class="clear-btn" id="clearBtn" data-i18n="clearAll">clear all</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <div class="footnote" data-i18n="footnote">requests are sent to http://localhost:8000 — serve this file from http://localhost:3000 to match backend CORS settings</div>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+  const STORAGE_KEY = 'shrnk_history';
+  const LANG_KEY = 'shrnk_lang';
+
+  const urlInput   = document.getElementById('urlInput');
+  const genBtn     = document.getElementById('genBtn');
+  const errorBox   = document.getElementById('errorBox');
+  const resultBox  = document.getElementById('resultBox');
+  const resultLink = document.getElementById('resultLink');
+  const copyBtn    = document.getElementById('copyBtn');
+  const historyList= document.getElementById('historyList');
+  const clearBtn   = document.getElementById('clearBtn');
+  const langEnBtn  = document.getElementById('langEn');
+  const langRuBtn  = document.getElementById('langRu');
+
+  const I18N = {
+    en: {
+      tagline: 'paste a long url, get a short one back',
+      prompt: 'paste-url --shorten',
+      inputPlaceholder: 'https://example.com/a/very/long/path?with=params',
+      generate: 'Generate',
+      resultLabel: 'your short url',
+      copy: 'Copy',
+      copied: 'Copied ✓',
+      recent: 'Recent',
+      clearAll: 'clear all',
+      footnote: 'requests are sent to http://localhost:8000 — serve this file from http://localhost:3000 to match backend CORS settings',
+      historyEmpty: 'nothing generated yet',
+      errEmpty: 'enter a url first',
+      errInvalid: 'that doesn\'t look like a valid http/https url',
+      errNotFound: 'no url found for that slug',
+      errNoSlug: 'no slug returned from server',
+      errServer: (status) => `server responded with ${status}`,
+      errNetwork: 'request blocked — make sure the backend is running on localhost:8000 and its CORS settings allow this page\'s origin',
+      errCopy: 'couldn\'t copy to clipboard'
+    },
+    ru: {
+      tagline: 'вставь длинную ссылку — получи короткую',
+      prompt: 'paste-url --shorten',
+      inputPlaceholder: 'https://example.com/очень/длинный/путь?с=параметрами',
+      generate: 'Сгенерировать',
+      resultLabel: 'ваша короткая ссылка',
+      copy: 'Копировать',
+      copied: 'Скопировано ✓',
+      recent: 'Недавние',
+      clearAll: 'очистить всё',
+      footnote: 'запросы отправляются на http://localhost:8000 — раздавайте этот файл с http://localhost:3000, чтобы совпадало с CORS бэкенда',
+      historyEmpty: 'пока ничего не сгенерировано',
+      errEmpty: 'сначала введите url',
+      errInvalid: 'это не похоже на корректный http/https url',
+      errNotFound: 'по этому slug ничего не найдено',
+      errNoSlug: 'сервер не вернул slug',
+      errServer: (status) => `сервер ответил кодом ${status}`,
+      errNetwork: 'запрос заблокирован — убедитесь, что бэкенд запущен на localhost:8000 и его CORS настройки разрешают этот origin',
+      errCopy: 'не удалось скопировать в буфер обмена'
+    }
+  };
+
+  let currentLang = localStorage.getItem(LANG_KEY) || 'en';
+
+  function t(key, ...args){
+    const entry = I18N[currentLang][key];
+    return typeof entry === 'function' ? entry(...args) : entry;
+  }
+
+  function applyLanguage(lang){
+    currentLang = lang;
+    localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = I18N[lang][key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      el.placeholder = I18N[lang][key];
+    });
+
+    langEnBtn.classList.toggle('active', lang === 'en');
+    langRuBtn.classList.toggle('active', lang === 'ru');
+
+    hideError();
+    resultBox.classList.remove('show');
+    renderHistory();
+  }
+
+  langEnBtn.addEventListener('click', () => applyLanguage('en'));
+  langRuBtn.addEventListener('click', () => applyLanguage('ru'));
+
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.classList.add('show');
+  }
+  function hideError(){
+    errorBox.classList.remove('show');
+    errorBox.textContent = '';
+  }
+  function isValidUrl(str){
+    try{
+      const u = new URL(str);
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    }catch(e){
+      return false;
+    }
+  }
+  function setLoading(isLoading){
+    genBtn.disabled = isLoading;
+    genBtn.classList.toggle('loading', isLoading);
+  }
+
+  function getHistory(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }catch(e){
+      return [];
+    }
+  }
+  function saveHistory(items){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+  function addToHistory(longUrl, slug){
+    const items = getHistory();
+    items.unshift({ longUrl, slug, ts: Date.now() });
+    saveHistory(items.slice(0, 20));
+    renderHistory();
+  }
+  function renderHistory(){
+    const items = getHistory();
+    if(!items.length){
+      historyList.innerHTML = `<div class="history-empty">${t('historyEmpty')}</div>`;
+      return;
+    }
+    historyList.innerHTML = items.map(item => `
+      <div class="history-item">
+        <a class="h-slug" href="${API_BASE}/${escapeAttr(item.slug)}" target="_blank" rel="noopener">/${escapeHtml(item.slug)}</a>
+        <span class="h-arrow">→</span>
+        <span class="h-long" title="${escapeAttr(item.longUrl)}">${escapeHtml(item.longUrl)}</span>
+      </div>
+    `).join('');
+  }
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function escapeAttr(str){
+    return escapeHtml(str).replace(/"/g, '&quot;');
+  }
+
+  async function generateShortUrl(){
+    hideError();
+    resultBox.classList.remove('show');
+
+    const longUrl = urlInput.value.trim();
+
+    if(!longUrl){
+      showError(t('errEmpty'));
+      return;
+    }
+    if(!isValidUrl(longUrl)){
+      showError(t('errInvalid'));
+      return;
+    }
+
+    setLoading(true);
+    try{
+      const res = await fetch(`${API_BASE}/short_url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ long_url: longUrl })
+      });
+
+      if(!res.ok){
+        let detail = '';
+        try{
+          const errBody = await res.json();
+          detail = errBody && errBody.detail;
+        }catch(parseErr){ /* body wasn't json, ignore */ }
+
+        if(res.status === 404){
+          throw new Error(t('errNotFound'));
+        }
+        throw new Error(detail || t('errServer', res.status));
+      }
+
+      const data = await res.json();
+      const slug = data.data;
+
+      if(!slug){
+        throw new Error(t('errNoSlug'));
+      }
+
+      const shortUrl = `${API_BASE}/${slug}`;
+      resultLink.textContent = shortUrl;
+      resultLink.href = shortUrl;
+      resultBox.classList.add('show');
+      copyBtn.textContent = t('copy');
+      copyBtn.classList.remove('copied');
+
+      addToHistory(longUrl, slug);
+      urlInput.value = '';
+    }catch(err){
+      if(err instanceof TypeError){
+        showError(t('errNetwork'));
+      }else{
+        showError(err.message);
+      }
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  genBtn.addEventListener('click', generateShortUrl);
+  urlInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') generateShortUrl();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(resultLink.href);
+      copyBtn.textContent = t('copied');
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = t('copy');
+        copyBtn.classList.remove('copied');
+      }, 1800);
+    }catch(e){
+      showError(t('errCopy'));
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    renderHistory();
+  });
+
+  applyLanguage(currentLang);
+</script>
+</body>
+</html>
