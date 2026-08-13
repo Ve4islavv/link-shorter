@@ -5,6 +5,7 @@ from fastapi import FastAPI, Body, status, HTTPException
 from fastapi.params import Depends
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import FileResponse
 
 from src.database.db import engine, new_session
 from src.database.models import Base
@@ -32,6 +33,12 @@ app.add_middleware(
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with new_session() as session:
         yield session
+
+
+@app.get("/")
+async def root():
+    return FileResponse("frontend/index.html")
+
 
 
 @app.post('/short_url')

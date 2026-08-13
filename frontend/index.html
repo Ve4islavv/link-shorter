@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>shrnk — a terminal for your links</title>
+<title>shortlink — a terminal for your links</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -53,7 +53,7 @@
     border-radius:8px;
     background: linear-gradient(135deg, var(--teal), var(--violet));
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--mono); font-weight:800; color:#0a0c10; font-size:16px;
+    font-family:var(--mono); font-weight:800; color:#0a0c10; font-size:18px;
     flex-shrink:0;
   }
   .brand-name{ font-family:var(--mono); font-weight:700; font-size:18px; letter-spacing:-0.02em; }
@@ -360,9 +360,16 @@
 
   <div class="brand-row">
     <div class="brand">
-      <div class="brand-mark">/s</div>
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 6 Q4 2 10 2 L90 2 Q96 2 96 6 L96 40 Q96 48 88 48 L64 48 Q58 48 58 42 L58 26 Q58 22 54 22 L46 22 Q42 22 42 26 L42 42 Q42 48 36 48 L12 48 Q4 48 4 40 Z"
+                fill="#0a0c10" stroke="#0a0c10" stroke-width="2"/>
+          <rect x="4" y="0" width="92" height="8" rx="4" fill="#0a0c10"/>
+          <circle cx="50" cy="4" r="3" fill="#e7e9ee"/>
+        </svg>
+      </div>
       <div>
-        <div class="brand-name">shrnk</div>
+        <div class="brand-name">shortlink</div>
         <div class="brand-tag" data-i18n="tagline">paste a long url, get a short one back</div>
       </div>
     </div>
@@ -377,10 +384,10 @@
       <span class="dot r"></span>
       <span class="dot y"></span>
       <span class="dot g"></span>
-      <span class="term-title">localhost:8000/short_url</span>
+      <span class="term-title"></span>
     </div>
     <div class="term-body">
-      <div class="prompt-line"><span class="sym">$</span> <span data-i18n="prompt">paste-url --shorten</span></div>
+      <div class="prompt-line"><span class="sym">🩳</span> <span data-i18n="prompt">paste-url --shorten</span></div>
 
       <div class="input-row">
         <div class="input-shell">
@@ -413,7 +420,7 @@
     <div class="history-list" id="historyList"></div>
   </div>
 
-  <div class="footnote" data-i18n="footnote">requests are sent to http://localhost:8000 — serve this file from http://localhost:3000 to match backend CORS settings</div>
+  <div class="footnote" data-i18n="footnote">все права защищены организацией объединённых шортиков</div>
 </div>
 
 <script>
@@ -435,7 +442,7 @@
   const I18N = {
     en: {
       tagline: 'paste a long url, get a short one back',
-      prompt: 'paste-url --shorten',
+      prompt: 'time to shed the tail',
       inputPlaceholder: 'https://example.com/a/very/long/path?with=params',
       generate: 'Generate',
       resultLabel: 'your short url',
@@ -443,7 +450,7 @@
       copied: 'Copied ✓',
       recent: 'Recent',
       clearAll: 'clear all',
-      footnote: 'requests are sent to http://localhost:8000 — serve this file from http://localhost:3000 to match backend CORS settings',
+      footnote: 'all rights reserved by the united shortlinks organization',
       historyEmpty: 'nothing generated yet',
       errEmpty: 'enter a url first',
       errInvalid: 'that doesn\'t look like a valid http/https url',
@@ -455,7 +462,7 @@
     },
     ru: {
       tagline: 'вставь длинную ссылку — получи короткую',
-      prompt: 'paste-url --shorten',
+      prompt: 'время скинуть хвост',
       inputPlaceholder: 'https://example.com/очень/длинный/путь?с=параметрами',
       generate: 'Сгенерировать',
       resultLabel: 'ваша короткая ссылка',
@@ -463,7 +470,7 @@
       copied: 'Скопировано ✓',
       recent: 'Недавние',
       clearAll: 'очистить всё',
-      footnote: 'запросы отправляются на http://localhost:8000 — раздавайте этот файл с http://localhost:3000, чтобы совпадало с CORS бэкенда',
+      footnote: 'все права защищены организацией объединённых шортиков',
       historyEmpty: 'пока ничего не сгенерировано',
       errEmpty: 'сначала введите url',
       errInvalid: 'это не похоже на корректный http/https url',
